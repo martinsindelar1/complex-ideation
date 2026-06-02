@@ -2,9 +2,27 @@
 
 A static one-page inspiration board for weekly moodboards, reels, static ads, and graphic ideas.
 
+## Deploy With Vercel
+
+This project is ready for Vercel as a static site.
+
+1. Push this repo to GitHub.
+2. In Vercel, choose `Add New` -> `Project`.
+3. Import the GitHub repo.
+4. Use these project settings:
+
+- Framework Preset: `Other`
+- Root Directory: repository root
+- Build Command: leave empty
+- Output Directory: leave empty or `.`
+
+Vercel will publish `index.html` directly. The included `vercel.json` keeps `data/inspiration.json` fresh so weekly updates appear without fighting stale CDN cache.
+
+For a team workflow, connect the repo under your Vercel team account. Each push to `main` publishes production, and pull requests get preview deployments automatically.
+
 ## Connect To GitHub
 
-Put this folder in a GitHub repo. The page is already prepared for GitHub Pages and reads weekly content from:
+Put this folder in a GitHub repo. The page reads weekly content from:
 
 ```txt
 data/inspiration.json
@@ -45,7 +63,7 @@ Edit `data/inspiration.json`. Add, remove, or reorder items inside the `items` a
 }
 ```
 
-Keep `content.js` as the direct-file fallback. When the site is hosted on GitHub Pages, `data/inspiration.json` is the source the page will load.
+Keep `content.js` as the direct-file fallback. When the site is hosted on Vercel, `data/inspiration.json` is the source the page will load.
 
 Use one of these `type` values to keep the filters clean:
 
@@ -65,13 +83,6 @@ Examples:
 - `https://your-cdn.example.com/static-ad.webp`
 
 The `+` button on the page also imports photos and videos into the browser's local archive. That is useful for weekly review, but it is saved only in that browser profile, not into the project folder.
-
-## Publish On GitHub Pages
-
-1. Create a GitHub repo and upload these files.
-2. In GitHub, go to `Settings` -> `Pages`.
-3. Set the source to the `main` branch and root folder.
-4. Open the Pages URL GitHub gives you.
 
 ## Open
 
