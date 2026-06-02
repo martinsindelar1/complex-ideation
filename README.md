@@ -72,6 +72,12 @@ Use one of these `type` values to keep the filters clean:
 - `static ads`
 - `graphic`
 
+## Board Experience
+
+Each filter opens an endless black board above the index list. The board repeats the filtered references as scattered frames, so a small weekly set can still be navigated like a larger inspiration field.
+
+Click a frame to select or unselect it as a pick. Picks are saved in the browser with `localStorage`, so they are personal to the person browsing and do not change `data/inspiration.json`.
+
 ## Add Project Media
 
 Put permanent images or videos in `assets/`, then point an item `media` field to that file path.

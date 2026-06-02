@@ -14,7 +14,7 @@
       href="https://fonts.googleapis.com/css2?family=Unbounded:wght@400;500;700;900&display=swap"
       rel="stylesheet"
     />
-    <link rel="stylesheet" href="styles.css?v=20260602-5" />
+    <link rel="stylesheet" href="styles.css?v=20260602-6" />
   </head>
   <body>
     <div class="site-bg" aria-hidden="true"></div>
@@ -43,6 +43,26 @@
         <div class="board-head">
           <span>INDEX</span>
           <div class="filters" id="filters" aria-label="Category filters"></div>
+        </div>
+        <div class="board-lab" aria-label="Endless inspiration board">
+          <div class="board-toolbar">
+            <div class="board-status">
+              <span id="board-mode-label">ALL BOARD</span>
+              <strong id="board-pick-count">0 PICKS</strong>
+            </div>
+            <div class="board-actions">
+              <button type="button" data-board-nav="prev" aria-label="Previous frame" title="Previous">
+                &lt;
+              </button>
+              <button type="button" data-board-nav="next" aria-label="Next frame" title="Next">
+                &gt;
+              </button>
+            </div>
+          </div>
+          <div class="infinite-board" id="infinite-board" tabindex="0">
+            <div class="board-track" id="board-track"></div>
+          </div>
+          <div class="picked-strip" id="picked-strip" aria-label="Picked references"></div>
         </div>
         <div class="inspiration-list" id="inspiration-list"></div>
       </section>
@@ -79,8 +99,8 @@
       </form>
     </dialog>
 
-    <script src="github-config.js?v=20260602-5"></script>
-    <script src="content.js?v=20260602-5"></script>
-    <script src="script.js?v=20260602-5"></script>
+    <script src="github-config.js?v=20260602-6"></script>
+    <script src="content.js?v=20260602-6"></script>
+    <script src="script.js?v=20260602-6"></script>
   </body>
 </html>

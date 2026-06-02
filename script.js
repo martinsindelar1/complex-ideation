@@ -14,19 +14,37 @@ const openImportButtons = document.querySelectorAll("[data-open-import]");
 const mediaInput = document.querySelector("#media-input");
 const mediaGrid = document.querySelector("#media-grid");
 const dropZone = document.querySelector("#drop-zone");
+const boardLab = document.querySelector(".board-lab");
+const boardEl = document.querySelector("#infinite-board");
+const boardTrack = document.querySelector("#board-track");
+const boardModeLabel = document.querySelector("#board-mode-label");
+const boardPickCount = document.querySelector("#board-pick-count");
+const pickedStrip = document.querySelector("#picked-strip");
+const boardNavButtons = document.querySelectorAll("[data-board-nav]");
 
 let references = [];
+const PICK_STORAGE_KEY = "noir-reference-picks";
+const BOARD_BATCH_SIZE = 56;
+const BOARD_APPEND_SIZE = 24;
+const BOARD_SPACING = 240;
+
 const state = {
   filter: "all",
   db: null,
-  mediaUrls: new Map()
+  mediaUrls: new Map(),
+  boardFrames: [],
+  activeBoardIndex: 0,
+  picks: new Set()
 };
 
 async function init() {
   references = await loadReferences();
+  state.picks = loadPicks();
   renderWeekLabel();
   renderFilters();
+  renderBoard({ reset: true });
   renderList();
+  bindBoardControls();
   bindImportPanel();
   setupDatabase().then(renderMediaGrid).catch(() => {
     mediaGrid.innerHTML = '<p class="empty-state">LOCAL STORAGE UNAVAILABLE</p>';
@@ -116,13 +134,19 @@ function renderFilters() {
     button.addEventListener("click", () => {
       state.filter = button.dataset.filter;
       renderFilters();
+      renderBoard({ reset: true });
       renderList();
+      boardLab.scrollIntoView({ behavior: "smooth", block: "start" });
     });
   });
 }
 
+function getVisibleReferences() {
+  return references.filter((item) => state.filter === "all" || item.type === state.filter);
+}
+
 function renderList() {
-  const visible = references.filter((item) => state.filter === "all" || item.type === state.filter);
+  const visible = getVisibleReferences();
 
   listEl.innerHTML = visible
     .map((item, index) => {
@@ -156,15 +180,300 @@ function renderList() {
 
 function updatePreview(row) {
   const { title, type, cue, media } = row.dataset;
-  const isVideo = /\.(mp4|webm|ogg|mov)(\?.*)?$/i.test(media);
 
+  updatePreviewContent({ title, type, cue, media });
+}
+
+function updatePreviewContent(item) {
+  const isVideo = isVideoMedia(item.media);
   document.body.classList.add("has-preview");
-  previewType.textContent = type.toUpperCase();
-  previewTitle.textContent = title;
-  previewCue.textContent = cue;
+  previewType.textContent = item.type.toUpperCase();
+  previewTitle.textContent = item.title;
+  previewCue.textContent = item.cue;
   previewMedia.innerHTML = isVideo
-    ? `<video src="${media}" muted autoplay loop playsinline></video>`
-    : `<img src="${media}" alt="" />`;
+    ? `<video src="${escapeAttribute(item.media)}" muted autoplay loop playsinline></video>`
+    : `<img src="${escapeAttribute(item.media)}" alt="" />`;
+}
+
+function renderBoard({ reset = false } = {}) {
+  const visible = getVisibleReferences();
+  const label = state.filter === "all" ? "ALL BOARD" : `${state.filter.toUpperCase()} BOARD`;
+
+  boardModeLabel.textContent = label;
+  updatePickCount();
+
+  if (!visible.length) {
+    state.boardFrames = [];
+    boardTrack.innerHTML = '<p class="board-empty">NO REFERENCES</p>';
+    renderPickedStrip();
+    return;
+  }
+
+  if (reset) {
+    state.boardFrames = createBoardFrames(visible, 0, BOARD_BATCH_SIZE);
+    state.activeBoardIndex = 0;
+  }
+
+  renderBoardTrack();
+  renderPickedStrip();
+
+  if (reset) {
+    boardEl.scrollLeft = 0;
+  }
+}
+
+function createBoardFrames(items, startIndex, count) {
+  const seed = hashString(state.filter);
+
+  return Array.from({ length: count }, (_, offset) => {
+    const index = startIndex + offset;
+    const item = items[index % items.length];
+    const width = Math.round(188 + randomUnit(index, seed + 13) * 116);
+    const ratio = 0.72 + randomUnit(index, seed + 41) * 0.52;
+    const topLimit = 420 - width * ratio;
+    const top = Math.round(28 + randomUnit(index, seed + 71) * Math.max(120, topLimit));
+    const left = Math.round(32 + index * BOARD_SPACING + randomUnit(index, seed + 97) * 74);
+    const tilt = (randomUnit(index, seed + 131) * 4 - 2).toFixed(2);
+
+    return {
+      item,
+      index,
+      left,
+      top,
+      width,
+      ratio: ratio.toFixed(3),
+      tilt
+    };
+  });
+}
+
+function renderBoardTrack() {
+  const lastFrame = state.boardFrames[state.boardFrames.length - 1];
+  const trackWidth = lastFrame ? lastFrame.left + lastFrame.width + 160 : 0;
+
+  boardTrack.style.width = `${trackWidth}px`;
+  boardTrack.innerHTML = state.boardFrames.map(renderBoardFrame).join("");
+
+  boardTrack.querySelectorAll(".board-frame").forEach((frame) => {
+    frame.addEventListener("click", () => {
+      selectBoardFrame(Number(frame.dataset.boardIndex), true);
+      togglePick(frame.dataset.refId);
+    });
+
+    frame.addEventListener("focus", () => {
+      selectBoardFrame(Number(frame.dataset.boardIndex), false);
+    });
+  });
+}
+
+function renderBoardFrame(frame) {
+  const { item } = frame;
+  const refId = getReferenceId(item);
+  const picked = state.picks.has(refId);
+  const active = frame.index === state.activeBoardIndex;
+  const media = isVideoMedia(item.media)
+    ? `<video src="${escapeAttribute(item.media)}" muted loop playsinline></video>`
+    : `<img src="${escapeAttribute(item.media)}" alt="" loading="lazy" />`;
+
+  return `
+    <article
+      class="board-frame${picked ? " is-picked" : ""}${active ? " is-active" : ""}"
+      data-board-index="${frame.index}"
+      data-ref-id="${escapeAttribute(refId)}"
+      style="left:${frame.left}px; top:${frame.top}px; width:${frame.width}px; --frame-ratio:${frame.ratio}; --tilt:${frame.tilt}deg;"
+      tabindex="0"
+      aria-label="${escapeAttribute(item.title)}"
+    >
+      <div class="board-media">${media}</div>
+      <div class="board-caption">
+        <span>${escapeHtml(item.type)}</span>
+        <strong>${escapeHtml(item.title)}</strong>
+      </div>
+      <span class="board-pick" aria-hidden="true">${picked ? "x" : "+"}</span>
+    </article>
+  `;
+}
+
+function bindBoardControls() {
+  boardNavButtons.forEach((button) => {
+    button.addEventListener("click", () => {
+      const direction = button.dataset.boardNav === "next" ? 1 : -1;
+      selectBoardFrame(state.activeBoardIndex + direction, true);
+    });
+  });
+
+  boardEl.addEventListener("keydown", (event) => {
+    if (event.key !== "ArrowRight" && event.key !== "ArrowLeft") return;
+
+    event.preventDefault();
+    selectBoardFrame(state.activeBoardIndex + (event.key === "ArrowRight" ? 1 : -1), true);
+  });
+
+  boardEl.addEventListener(
+    "wheel",
+    (event) => {
+      if (Math.abs(event.deltaY) <= Math.abs(event.deltaX)) return;
+
+      event.preventDefault();
+      boardEl.scrollLeft += event.deltaY;
+      maybeExtendBoard();
+    },
+    { passive: false }
+  );
+}
+
+function selectBoardFrame(index, shouldScroll) {
+  if (!state.boardFrames.length) return;
+
+  if (index < 0) {
+    index = state.boardFrames.length - 1;
+  }
+
+  if (index >= state.boardFrames.length) {
+    appendBoardFrames();
+  }
+
+  const frame = state.boardFrames[index] || state.boardFrames[0];
+  state.activeBoardIndex = frame.index;
+  updatePreviewContent(frame.item);
+  syncBoardActiveState();
+
+  if (shouldScroll) {
+    const targetLeft = Math.max(0, frame.left - boardEl.clientWidth / 2 + frame.width / 2);
+    boardEl.scrollTo({ left: targetLeft, behavior: "smooth" });
+  }
+
+  maybeExtendBoard();
+}
+
+function syncBoardActiveState() {
+  boardTrack.querySelectorAll(".board-frame").forEach((frame) => {
+    frame.classList.toggle("is-active", Number(frame.dataset.boardIndex) === state.activeBoardIndex);
+  });
+}
+
+function maybeExtendBoard() {
+  if (state.activeBoardIndex > state.boardFrames.length - 8) {
+    appendBoardFrames();
+  }
+
+  if (boardEl.scrollLeft + boardEl.clientWidth > boardTrack.offsetWidth - 1200) {
+    appendBoardFrames();
+  }
+}
+
+function appendBoardFrames() {
+  const visible = getVisibleReferences();
+  if (!visible.length) return;
+
+  const startIndex = state.boardFrames.length;
+  state.boardFrames.push(...createBoardFrames(visible, startIndex, BOARD_APPEND_SIZE));
+  renderBoardTrack();
+  syncBoardActiveState();
+}
+
+function togglePick(refId) {
+  if (state.picks.has(refId)) {
+    state.picks.delete(refId);
+  } else {
+    state.picks.add(refId);
+  }
+
+  savePicks();
+  updatePickCount();
+  renderPickedStrip();
+
+  boardTrack.querySelectorAll(`[data-ref-id="${refId}"]`).forEach((frame) => {
+    const picked = state.picks.has(refId);
+    frame.classList.toggle("is-picked", picked);
+    const marker = frame.querySelector(".board-pick");
+    if (marker) marker.textContent = picked ? "x" : "+";
+  });
+}
+
+function renderPickedStrip() {
+  const pickedItems = getUniqueReferences().filter((item) => state.picks.has(getReferenceId(item)));
+
+  if (!pickedItems.length) {
+    pickedStrip.innerHTML = '<span class="picked-empty">NO PICKS</span>';
+    return;
+  }
+
+  pickedStrip.innerHTML = pickedItems
+    .map((item) => {
+      const refId = getReferenceId(item);
+      return `
+        <button type="button" class="picked-chip" data-picked-id="${escapeAttribute(refId)}">
+          <span>${escapeHtml(item.type)}</span>
+          <strong>${escapeHtml(item.title)}</strong>
+        </button>
+      `;
+    })
+    .join("");
+
+  pickedStrip.querySelectorAll("[data-picked-id]").forEach((chip) => {
+    chip.addEventListener("click", () => {
+      const frame = state.boardFrames.find((boardFrame) => getReferenceId(boardFrame.item) === chip.dataset.pickedId);
+      if (frame) {
+        selectBoardFrame(frame.index, true);
+      }
+    });
+  });
+}
+
+function updatePickCount() {
+  boardPickCount.textContent = `${state.picks.size} ${state.picks.size === 1 ? "PICK" : "PICKS"}`;
+}
+
+function getUniqueReferences() {
+  const seen = new Set();
+
+  return references.filter((item) => {
+    const refId = getReferenceId(item);
+    if (seen.has(refId)) return false;
+    seen.add(refId);
+    return true;
+  });
+}
+
+function getReferenceId(item) {
+  return slugify(`${item.week}-${item.type}-${item.title}`);
+}
+
+function loadPicks() {
+  try {
+    return new Set(JSON.parse(localStorage.getItem(PICK_STORAGE_KEY) || "[]"));
+  } catch {
+    return new Set();
+  }
+}
+
+function savePicks() {
+  try {
+    localStorage.setItem(PICK_STORAGE_KEY, JSON.stringify([...state.picks]));
+  } catch {
+    return;
+  }
+}
+
+function isVideoMedia(media = "") {
+  return /\.(mp4|webm|ogg|mov)(\?.*)?$/i.test(media);
+}
+
+function hashString(value = "") {
+  return [...value].reduce((hash, char) => (hash * 31 + char.charCodeAt(0)) >>> 0, 2166136261);
+}
+
+function randomUnit(index, seed) {
+  const value = Math.sin(index * 12.9898 + seed * 78.233) * 43758.5453;
+  return value - Math.floor(value);
+}
+
+function slugify(value = "") {
+  return String(value)
+    .toLowerCase()
+    .replace(/[^a-z0-9]+/g, "-")
+    .replace(/^-+|-+$/g, "");
 }
 
 function bindImportPanel() {
