@@ -1,0 +1,60 @@
+{
+  "items": [
+    {
+      "title": "Hard Shadow Product Crops",
+      "type": "static ads",
+      "week": "2026 W23",
+      "medium": "photo set",
+      "cue": "Flash, hard crop, negative space, white edge tension.",
+      "media": "assets/monochrome-editorial-bg.png"
+    },
+    {
+      "title": "Paper Noise Motion Cuts",
+      "type": "inspiration reels",
+      "week": "2026 W23",
+      "medium": "video",
+      "cue": "Fast cuts, torn texture, 0.5 second visual hits.",
+      "media": "assets/monochrome-editorial-bg.png"
+    },
+    {
+      "title": "Brutalist Type Stack",
+      "type": "graphic",
+      "week": "2026 W23",
+      "medium": "layout",
+      "cue": "Oversized word blocks, strict grid, tight monochrome contrast.",
+      "media": "assets/monochrome-editorial-bg.png"
+    },
+    {
+      "title": "Studio Contact Sheets",
+      "type": "moodboards",
+      "week": "2026 W23",
+      "medium": "image board",
+      "cue": "Analog frames, black margins, silver highlights.",
+      "media": "assets/monochrome-editorial-bg.png"
+    },
+    {
+      "title": "Obsidian UI Fragments",
+      "type": "graphic",
+      "week": "2026 W23",
+      "medium": "visual system",
+      "cue": "Thin lines, dense labels, quiet luxury interface rhythm.",
+      "media": "assets/monochrome-editorial-bg.png"
+    },
+    {
+      "title": "One-Color Offer Posters",
+      "type": "static ads",
+      "week": "2026 W23",
+      "medium": "ad concept",
+      "cue": "Single offer, giant type, no decorative color.",
+      "media": "assets/monochrome-editorial-bg.png"
+    },
+    {
+      "title": "Micro-Loop Texture Reel",
+      "type": "inspiration reels",
+      "week": "2026 W23",
+      "medium": "video",
+      "cue": "Three-second loop, grain pulse, paper flash transition.",
+      "media": "assets/monochrome-editorial-bg.png"
+    }
+  ]
+}

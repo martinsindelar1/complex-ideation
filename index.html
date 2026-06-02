@@ -1,0 +1,86 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Noir Reference Board</title>
+    <meta
+      name="description"
+      content="A weekly black and white creative reference board for moodboards, reels, static ads, and graphic ideas."
+    />
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link
+      href="https://fonts.googleapis.com/css2?family=Unbounded:wght@400;500;700;900&display=swap"
+      rel="stylesheet"
+    />
+    <link rel="stylesheet" href="styles.css?v=20260602-5" />
+  </head>
+  <body>
+    <div class="site-bg" aria-hidden="true"></div>
+    <div class="grain" aria-hidden="true"></div>
+
+    <header class="topbar">
+      <a class="wordmark" href="#" aria-label="Noir Reference Board home">NOIR/REF</a>
+      <div class="topbar-actions">
+        <button class="icon-button" data-open-import aria-label="Import media" title="Import media">
+          +
+        </button>
+      </div>
+    </header>
+
+    <main class="page-shell">
+      <section class="hero" aria-labelledby="page-title">
+        <p class="eyebrow">WEEKLY CREATIVE INDEX</p>
+        <h1 id="page-title">MOODBOARDS<br />REELS<br />STATIC ADS<br />GRAPHIC</h1>
+        <div class="hero-meta" aria-label="Board metadata">
+          <span id="week-label">WEEKLY DROP</span>
+          <span>BLACK / WHITE / DARK</span>
+        </div>
+      </section>
+
+      <section class="board" aria-label="Creative inspiration list">
+        <div class="board-head">
+          <span>INDEX</span>
+          <div class="filters" id="filters" aria-label="Category filters"></div>
+        </div>
+        <div class="inspiration-list" id="inspiration-list"></div>
+      </section>
+    </main>
+
+    <aside class="preview-panel" aria-live="polite" aria-label="Selected reference preview">
+      <div class="preview-media" id="preview-media"></div>
+      <div class="preview-copy">
+        <p id="preview-type">MOODBOARD</p>
+        <h2 id="preview-title">Hover a reference</h2>
+        <span id="preview-cue">Weekly creative pulse</span>
+      </div>
+    </aside>
+
+    <dialog class="import-panel" id="import-panel" aria-labelledby="import-title">
+      <form method="dialog" class="import-shell">
+        <div class="import-head">
+          <div>
+            <p>LOCAL ARCHIVE</p>
+            <h2 id="import-title">IMPORT</h2>
+          </div>
+          <button class="icon-button" value="close" aria-label="Close import panel" title="Close">
+            x
+          </button>
+        </div>
+
+        <label class="drop-zone" id="drop-zone">
+          <input id="media-input" type="file" accept="image/*,video/*" multiple />
+          <span>DROP / SELECT</span>
+          <small>PHOTOS + VIDEOS</small>
+        </label>
+
+        <div class="media-grid" id="media-grid" aria-label="Imported media"></div>
+      </form>
+    </dialog>
+
+    <script src="github-config.js?v=20260602-5"></script>
+    <script src="content.js?v=20260602-5"></script>
+    <script src="script.js?v=20260602-5"></script>
+  </body>
+</html>
